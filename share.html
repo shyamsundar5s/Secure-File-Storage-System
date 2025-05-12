@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Share File</title>
+</head>
+<body>
+  <h1>Share File</h1>
+  <form id="shareForm">
+    <input type="text" name="cid" placeholder="File CID" required />
+    <input type="text" name="recipient" placeholder="Recipient Username" required />
+    <textarea name="recipientPublicKey" placeholder="Recipient Public Key" required></textarea>
+    <button type="submit">Share</button>
+  </form>
+
+  <script>
+    document.getElementById('shareForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const form = event.target;
+      const data = new FormData(form);
+
+      const response = await fetch('/share', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        body: JSON.stringify({
+          cid: data.get('cid'),
+          recipient: data.get('recipient'),
+          recipientPublicKey: data.get('recipientPublicKey'),
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const result = await response.json();
+      if (result.error) alert(`Error: ${result.error}`);
+      else alert('File shared successfully!');
+    });
+  </script>
+</body>
+</html>
