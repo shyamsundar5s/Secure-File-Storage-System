@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure File Storage</title>
+</head>
+<body>
+  <h1>Secure File Upload</h1>
+  <form id="uploadForm" enctype="multipart/form-data">
+    <input type="text" name="owner" placeholder="Your name" required />
+    <input type="file" name="file" required />
+    <button type="submit">Upload</button>
+  </form>
+
+  <script>
+    document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const form = event.target;
+      const formData = new FormData(form);
+
+      const file = formData.get('file');
+      const aesKey = crypto.getRandomValues(new Uint8Array(32)); // Generate AES key
+      const iv = new Uint8Array(16);
+
+      // Encrypt file (browser-side)
+      const encryptedBuffer = await crypto.subtle.encrypt(
+        { name: 'AES-CBC', iv },
+        await crypto.subtle.importKey('raw', aesKey, { name: 'AES-CBC' }, false, ['encrypt']),
+        new Uint8Array(await file.arrayBuffer())
+      );
+
+      // Replace original file with encrypted content
+      const encryptedFile = new File([encryptedBuffer], file.name);
+      formData.set('file', encryptedFile);
+
+      // Upload form
+      const response = await fetch('/upload', { method: 'POST', body: formData });
+      const result = await response.json();
+
+      console.log(result);
+      alert('File uploaded successfully!');
+    });
+  </script>
+</body>
+</html>
